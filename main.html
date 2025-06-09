@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Currency Converter</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    color: #333;
+  }
+
+  .container {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.5);
+    padding: 2.5rem 3rem;
+    width: 360px;
+    max-width: 100%;
+    text-align: center;
+  }
+
+  h2 {
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    color: #4b3b94;
+    letter-spacing: 1px;
+  }
+
+  label {
+    display: block;
+    margin-top: 1.2rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #5a4b9a;
+    text-align: left;
+  }
+
+  input[type="number"],
+  select {
+    width: 100%;
+    padding: 0.65rem 1rem;
+    margin-top: 0.3rem;
+    border-radius: 0.5rem;
+    border: 1.8px solid #ddd;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+    appearance: none;
+    background: #fafafa;
+    cursor: pointer;
+  }
+  input[type="number"]:focus,
+  select:focus {
+    outline: none;
+    border-color: #764ba2;
+    background: #fff;
+    box-shadow: 0 0 8px rgba(118, 75, 162, 0.5);
+  }
+
+  button {
+    margin-top: 2rem;
+    width: 100%;
+    padding: 0.75rem 0;
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    border: none;
+    border-radius: 0.7rem;
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    box-shadow: 0 6px 15px rgba(118, 75, 162, 0.6);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+  button:hover:not(:disabled) {
+    background: linear-gradient(135deg, #5b3e94 0%, #4a3684 100%);
+    box-shadow: 0 10px 25px rgba(74, 54, 132, 0.8);
+  }
+  button:disabled {
+    background: #b8a7d9;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .flag {
+    width: 28px;
+    height: 20px;
+    border-radius: 0.3rem;
+    vertical-align: middle;
+    margin-right: 0.7rem;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.15);
+    border: 1px solid #ccc;
+  }
+
+  /* Align flag and select nicely */
+  select {
+    padding-left: 3rem;
+    background-image: none !important;
+    position: relative;
+  }
+  /* Position flag inside label before select */
+  label[for="fromCurrency"] {
+    position: relative;
+  }
+  label[for="toCurrency"] {
+    position: relative;
+  }
+  .flag-container {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  .result {
+    margin-top: 1.8rem;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: #4b3b94;
+    min-height: 2.5rem;
+  }
+
+  .error {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #d44a4a;
+    min-height: 1.5rem;
+  }
+
+</style>
+
+</head>
+<body>
+<div class="container">
+  <h2 style="text-align:center;">Currency Converter</h2>
+
+  <label for="amount">Amount</label>
+  <input type="number" id="amount" value="1" min="0" step="0.01" />
+
+  <label for="fromCurrency">From</label>
+  <select id="fromCurrency"></select>
+
+  <label for="toCurrency">To</label>
+  <select id="toCurrency"></select>
+
+  <button id="convertBtn">Get Exchange Rate</button>
+
+  <div class="result" id="result"></div>
+  <div class="error" id="error"></div>
+</div>
+
+<script>
+  // Currency to country code mapping (same as yours)
+  const countryList = {
+    AED: "AE", AFN: "AF", XCD: "AG", ALL: "AL", AMD: "AM", ANG: "AN", AOA: "AO",
+    AQD: "AQ", ARS: "AR", AUD: "AU", AWG: "AW", AZN: "AZ", BAM: "BA", BBD: "BB",
+    BDT: "BD", XOF: "BE", BGN: "BG", BHD: "BH", BIF: "BI", BMD: "BM", BND: "BN",
+    BOB: "BO", BRL: "BR", BSD: "BS", NOK: "BV", BWP: "BW", BYR: "BY", BZD: "BZ",
+    CAD: "CA", CDF: "CD", XAF: "CF", CHF: "CH", CLP: "CL", CNY: "CN", COP: "CO",
+    CRC: "CR", CUP: "CU", CVE: "CV", CYP: "CY", CZK: "CZ", DJF: "DJ", DKK: "DK",
+    DOP: "DO", DZD: "DZ", ECS: "EC", EEK: "EE", EGP: "EG", ETB: "ET", EUR: "FR",
+    FJD: "FJ", FKP: "FK", GBP: "GB", GEL: "GE", GGP: "GG", GHS: "GH", GIP: "GI",
+    GMD: "GM", GNF: "GN", GTQ: "GT", GYD: "GY", HKD: "HK", HNL: "HN", HRK: "HR",
+    HTG: "HT", HUF: "HU", IDR: "ID", ILS: "IL", INR: "IN", IQD: "IQ", IRR: "IR",
+    ISK: "IS", JMD: "JM", JOD: "JO", JPY: "JP", KES: "KE", KGS: "KG", KHR: "KH",
+    KMF: "KM", KPW: "KP", KRW: "KR", KWD: "KW", KYD: "KY", KZT: "KZ", LAK: "LA",
+    LBP: "LB", LKR: "LK", LRD: "LR", LSL: "LS", LTL: "LT", LVL: "LV", LYD: "LY",
+    MAD: "MA", MDL: "MD", MGA: "MG", MKD: "MK", MMK: "MM", MNT: "MN", MOP: "MO",
+    MRO: "MR", MTL: "MT", MUR: "MU", MVR: "MV", MWK: "MW", MXN: "MX", MYR: "MY",
+    MZN: "MZ", NAD: "NA", XPF: "NC", NGN: "NG", NIO: "NI", NPR: "NP", NZD: "NZ",
+    OMR: "OM", PAB: "PA", PEN: "PE", PGK: "PG", PHP: "PH", PKR: "PK", PLN: "PL",
+    PYG: "PY", QAR: "QA", RON: "RO", RSD: "RS", RUB: "RU", RWF: "RW", SAR: "SA",
+    SBD: "SB", SCR: "SC", SDG: "SD", SEK: "SE", SGD: "SG", SKK: "SK", SLL: "SL",
+    SOS: "SO", SRD: "SR", STD: "ST", SVC: "SV", SYP: "SY", SZL: "SZ", THB: "TH",
+    TJS: "TJ", TMT: "TM", TND: "TN", TOP: "TO", TRY: "TR", TTD: "TT", TVD: "TV",
+    TWD: "TW", TZS: "TZ", UAH: "UA", UGX: "UG", USD: "US", UYU: "UY", UZS: "UZ",
+    VEF: "VE", VND: "VN", VUV: "VU", YER: "YE", ZAR: "ZA", ZMK: "ZM", ZWD: "ZW",
+  };
+
+  const popularCurrencies = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "INR", "KRW"];
+  const currencies = Object.keys(countryList).sort();
+
+  const fromSelect = document.getElementById("fromCurrency");
+  const toSelect = document.getElementById("toCurrency");
+  const amountInput = document.getElementById("amount");
+  const convertBtn = document.getElementById("convertBtn");
+  const resultDiv = document.getElementById("result");
+  const errorDiv = document.getElementById("error");
+
+  function getFlagUrl(currencyCode) {
+    const countryCode = countryList[currencyCode];
+    return countryCode ? `https://flagsapi.com/${countryCode}/flat/64.png` : "";
+  }
+
+  // Build options with flags
+  function buildOptions(selectElement) {
+    // Clear existing options
+    selectElement.innerHTML = "";
+
+    // Popular currencies group label
+    const popularGroup = document.createElement("optgroup");
+    popularGroup.label = "Popular";
+    popularCurrencies.forEach((currency) => {
+      const option = document.createElement("option");
+      option.value = currency;
+      option.text = currency;
+      popularGroup.appendChild(option);
+    });
+    selectElement.appendChild(popularGroup);
+
+    // All other currencies group label
+    const allGroup = document.createElement("optgroup");
+    allGroup.label = "All Currencies";
+
+    currencies
+      .filter((cur) => !popularCurrencies.includes(cur))
+      .forEach((currency) => {
+        const option = document.createElement("option");
+        option.value = currency;
+        option.text = currency;
+        allGroup.appendChild(option);
+      });
+    selectElement.appendChild(allGroup);
+  }
+
+  // Show flag next to selected option label
+  function updateFlag(selectElement, imgElement) {
+    const currencyCode = selectElement.value;
+    const flagUrl = getFlagUrl(currencyCode);
+    if (flagUrl) {
+      imgElement.src = flagUrl;
+      imgElement.alt = currencyCode;
+    } else {
+      imgElement.src = "";
+      imgElement.alt = "";
+    }
+  }
+
+  // Initialize selects
+  buildOptions(fromSelect);
+  buildOptions(toSelect);
+
+  // Default flags images
+  const fromFlag = document.createElement("img");
+  fromFlag.className = "flag";
+  fromSelect.parentNode.insertBefore(fromFlag, fromSelect);
+
+  const toFlag = document.createElement("img");
+  toFlag.className = "flag";
+  toSelect.parentNode.insertBefore(toFlag, toSelect);
+
+  // Update flags initially
+  updateFlag(fromSelect, fromFlag);
+  updateFlag(toSelect, toFlag);
+
+  fromSelect.addEventListener("change", () => updateFlag(fromSelect, fromFlag));
+  toSelect.addEventListener("change", () => updateFlag(toSelect, toFlag));
+
+  convertBtn.addEventListener("click", async () => {
+    const amount = parseFloat(amountInput.value);
+    if (isNaN(amount) || amount <= 0) {
+      errorDiv.textContent = "Please enter a valid amount greater than zero.";
+      resultDiv.textContent = "";
+      return;
+    }
+
+    errorDiv.textContent = "";
+    resultDiv.textContent = "Loading...";
+
+    const from = fromSelect.value;
+    const to = toSelect.value;
+
+    try {
+      const res = await fetch(`https://api.exchangerate-api.com/v4/latest/${from}`);
+      if (!res.ok) throw new Error("Failed to fetch exchange rate");
+      const data = await res.json();
+
+      if (!data.rates || !data.rates[to]) {
+        throw new Error("Currency not supported");
+      }
+
+      const rate = data.rates[to];
+      const converted = amount * rate;
+
+      resultDiv.textContent = `${amount.toFixed(2)} ${from} = ${converted.toFixed(2)} ${to} (1 ${from} = ${rate.toFixed(4)} ${to})`;
+    } catch (e) {
+      errorDiv.textContent = "Error fetching exchange rate. Try again later.";
+      resultDiv.textContent = "";
+      console.error(e);
+    }
+  });
+</script>
+</body>
+</html>
