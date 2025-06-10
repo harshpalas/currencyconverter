@@ -40,12 +40,11 @@
     return countryCode ? `https://flagsapi.com/${countryCode}/flat/64.png` : "";
   }
 
-  // Build options with flags
+ 
   function buildOptions(selectElement) {
     // Clear existing options
     selectElement.innerHTML = "";
 
-    // Popular currencies group label
     const popularGroup = document.createElement("optgroup");
     popularGroup.label = "Popular";
     popularCurrencies.forEach((currency) => {
@@ -55,11 +54,8 @@
       popularGroup.appendChild(option);
     });
     selectElement.appendChild(popularGroup);
-
-    // All other currencies group label
     const allGroup = document.createElement("optgroup");
     allGroup.label = "All Currencies";
-
     currencies
       .filter((cur) => !popularCurrencies.includes(cur))
       .forEach((currency) => {
@@ -70,8 +66,6 @@
       });
     selectElement.appendChild(allGroup);
   }
-
-  // Show flag next to selected option label
   function updateFlag(selectElement, imgElement) {
     const currencyCode = selectElement.value;
     const flagUrl = getFlagUrl(currencyCode);
@@ -84,11 +78,8 @@
     }
   }
 
-  // Initialize selects
   buildOptions(fromSelect);
   buildOptions(toSelect);
-
-  // Default flags images
   const fromFlag = document.createElement("img");
   fromFlag.className = "flag";
   fromSelect.parentNode.insertBefore(fromFlag, fromSelect);
@@ -96,8 +87,6 @@
   const toFlag = document.createElement("img");
   toFlag.className = "flag";
   toSelect.parentNode.insertBefore(toFlag, toSelect);
-
-  // Update flags initially
   updateFlag(fromSelect, fromFlag);
   updateFlag(toSelect, toFlag);
 
